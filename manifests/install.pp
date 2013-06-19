@@ -5,9 +5,13 @@ class python::install {
     default  => "python${python::version}",
   }
 
-  $pythondev = $::operatingsystem ? {
-    /(?i:RedHat|CentOS|Fedora)/ => "${python}-devel",
-    /(?i:Debian|Ubuntu)/        => "${python}-dev"
+  if $::operatingsystem == "Gentoo" {
+  } else {
+    $pythondev = $::operatingsystem ? {
+      /(?i:RedHat|CentOS|Fedora)/ => "${python}-devel",
+      /(?i:Debian|Ubuntu)/        => "${python}-dev"
+    }
+    package { $pythondev: ensure => $dev_ensure }
   }
 
   package { $python: ensure => present }
@@ -22,15 +26,30 @@ class python::install {
     default => absent,
   }
 
-  package { $pythondev: ensure => $dev_ensure }
-  package { 'python-pip': ensure => $pip_ensure }
+  if $::operatingsystem == "Gentoo" {
+    package { 'python-pip': 
+      ensure => $pip_ensure,
+      name => 'pip',
+      category => 'dev-python',
+    }
+  } else {
+    package { 'python-pip': ensure => $pip_ensure }
+  }
 
   $venv_ensure = $python::virtualenv ? {
     true    => present,
     default => absent,
   }
 
-  package { 'python-virtualenv': ensure => $venv_ensure }
+  if $::operatingsystem == "Gentoo" {
+    package { 'python-virtualenv': 
+      ensure => $venv_ensure,
+      name => 'virtualenv',
+      category => 'dev-python',
+    }
+  } else {
+    package { 'python-virtualenv': ensure => $venv_ensure }
+  }
 
   $gunicorn_ensure = $python::gunicorn ? {
     true    => present,
